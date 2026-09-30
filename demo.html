@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Charte — démo des composants</title>
+<link rel="stylesheet" href="charte.css">
+<style>
+  main { max-width: 900px; margin: 0 auto; padding: 32px 24px 64px; }
+  section { margin-bottom: 40px; }
+  .rangee { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .entete { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+  .modale-exemple { position: static; background: none; padding: 0; backdrop-filter: none; -webkit-backdrop-filter: none; justify-content: flex-start; }
+</style>
+</head>
+<body>
+<main>
+  <div class="entete">
+    <div>
+      <h1 class="titre-marque" style="margin:0">Charte graphique</h1>
+      <div class="texte-discret">Noir = interface · couleur = donnée ou erreur</div>
+    </div>
+    <button class="btn btn--secondaire btn--petit" id="theme">Thème</button>
+  </div>
+
+  <section>
+    <h2 class="titre-section">Boutons</h2>
+    <div class="rangee">
+      <button class="btn">Principal</button>
+      <button class="btn btn--secondaire">Secondaire</button>
+      <button class="btn btn--fantome">Fantôme</button>
+      <button class="btn btn--danger">Supprimer</button>
+      <button class="btn" disabled>Désactivé</button>
+      <button class="btn btn--petit">Petit</button>
+      <button class="btn btn--secondaire btn--icone" aria-label="Modifier">✎</button>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="titre-section">Champs</h2>
+    <div class="grille">
+      <div><label class="libelle" for="c1">Nom</label><input id="c1" class="champ" placeholder="Nom du projet"></div>
+      <div><label class="libelle" for="c2">Phase</label><select id="c2" class="champ"><option>AVP</option><option>DCE</option></select></div>
+      <div><label class="libelle" for="c3">Désactivé</label><input id="c3" class="champ" value="Lecture seule" disabled></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="titre-section">Badges (couleur = donnée)</h2>
+    <div class="rangee">
+      <span class="badge">À faire</span>
+      <span class="badge badge--info">En cours</span>
+      <span class="badge badge--alerte">Bloqué</span>
+      <span class="badge badge--erreur">En retard</span>
+      <span class="badge badge--succes">Terminé</span>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="titre-section">Cartes</h2>
+    <div class="grille">
+      <div class="carte carte--cliquable"><strong>Carte cliquable</strong><div class="texte-discret">Survol : ombre plus marquée</div></div>
+      <div class="carte"><strong>Carte simple</strong><div class="texte-discret">Filet fin, ombre douce</div></div>
+      <div class="verre"><strong>Panneau verre</strong><div class="texte-discret">Flou + transparence</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="titre-section">Tableau</h2>
+    <div class="carte" style="padding:0; overflow:hidden">
+      <table class="tableau">
+        <thead><tr><th>Projet</th><th>Tâche</th><th>Statut</th><th>Échéance</th></tr></thead>
+        <tbody>
+          <tr class="ligne--erreur"><td>Cour du Fermier</td><td>Finalisation ACT</td><td><span class="badge badge--info">En cours</span></td><td>18/09/2026</td></tr>
+          <tr><td>Dubus</td><td>Mise à jour chiffrage</td><td><span class="badge">À faire</span></td><td>25/09/2026</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="titre-section">Modale</h2>
+    <div class="modale-voile modale-exemple">
+      <div class="modale">
+        <h3 class="titre-marque" style="margin-top:0">Nouvelle tâche</h3>
+        <label class="libelle" for="m1">Projet</label>
+        <input id="m1" class="champ" placeholder="Choisir un projet…">
+        <div class="modale__pied"><button class="btn btn--fantome">Annuler</button><button class="btn">Enregistrer</button></div>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+  const r = document.documentElement;
+  try { const t = localStorage.getItem('charte-theme'); if (t) r.dataset.theme = t; } catch (e) {}
+  document.getElementById('theme').addEventListener('click', () => {
+    const sombre = getComputedStyle(r).getPropertyValue('--fond').trim() === '#0e0e10';
+    r.dataset.theme = sombre ? 'light' : 'dark';
+    try { localStorage.setItem('charte-theme', r.dataset.theme); } catch (e) {}
+  });
+</script>
+</body>
+</html>
