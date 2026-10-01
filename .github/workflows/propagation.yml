@@ -1,0 +1,59 @@
+# Propage la charte vers les applis : à chaque changement mergé sur main, ouvre une pull request
+# dans chaque dépôt listé dans apps.json. L'appli adopte la nouvelle version en mergeant la PR.
+# Secret requis : CHARTE_SYNC_TOKEN (jeton GitHub avec accès Contents + Pull requests en écriture
+# sur les dépôts des applis).
+name: Propager la charte
+
+on:
+  push:
+    branches: [main]
+    paths: ['charte.css', 'polices/**', 'apps.json']
+  workflow_dispatch:
+
+jobs:
+  propager:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ouvrir une PR dans chaque appli
+        env:
+          GH_TOKEN: ${{ secrets.CHARTE_SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION=$(grep -m1 -oE 'Version [0-9]+\.[0-9]+\.[0-9]+' charte.css | cut -d' ' -f2)
+          BRANCHE="charte/v${VERSION}"
+          SRC="$GITHUB_WORKSPACE"
+
+          jq -c '.[]' apps.json | while read -r app; do
+            REPO=$(jq -r '.repo' <<<"$app")
+            DOSSIER=$(jq -r '.dossier // "."' <<<"$app")
+            echo "== $REPO ($DOSSIER) =="
+
+            TMP=$(mktemp -d)
+            gh repo clone "$REPO" "$TMP" -- --depth 1
+            cd "$TMP"
+            git config user.name  "charte-bot"
+            git config user.email "charte-bot@users.noreply.github.com"
+            BASE=$(git rev-parse --abbrev-ref HEAD)
+
+            mkdir -p "$DOSSIER"
+            cp "$SRC/charte.css" "$DOSSIER/charte.css"
+            rm -rf "$DOSSIER/polices" && cp -r "$SRC/polices" "$DOSSIER/polices"
+
+            if [ -z "$(git status --porcelain)" ]; then
+              echo "Déjà à jour."; cd "$SRC"; continue
+            fi
+            if git ls-remote --exit-code --heads origin "$BRANCHE" >/dev/null 2>&1; then
+              echo "La branche $BRANCHE existe déjà : rien à faire."; cd "$SRC"; continue
+            fi
+
+            git checkout -b "$BRANCHE"
+            git add -A
+            git commit -m "Charte v${VERSION}"
+            git push -u origin "$BRANCHE"
+            gh pr create --repo "$REPO" --base "$BASE" --head "$BRANCHE" \
+              --title "Charte v${VERSION}" \
+              --body "Mise à jour automatique de la charte graphique vers la version ${VERSION} (source : ${GITHUB_REPOSITORY}@${GITHUB_SHA::7})."
+            cd "$SRC"
+          done
